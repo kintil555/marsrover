@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARS EXPLORER — Rover Mission</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --mars:#c1440e;--mars2:#8b2500;--mars3:#e8651a;
+  --cyan:#00ffe7;--cyan2:#00b8a9;
+  --gold:#ffd166;--red:#ff4d4d;
+  --panel:rgba(10,5,2,0.88);
+  --border:rgba(193,68,14,0.5);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0200;font-family:'Share Tech Mono',monospace}
+
+/* ===== LOADING SCREEN ===== */
+#loadingScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at center,#1a0800 0%,#0a0200 60%,#000 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  transition:opacity 0.8s;
+}
+.load-planet{
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#e8651a,#c1440e 40%,#8b2500 70%,#4a1200);
+  box-shadow:0 0 60px rgba(193,68,14,0.6),0 0 120px rgba(193,68,14,0.2),inset -20px -20px 40px rgba(0,0,0,0.5);
+  animation:pulsePlanet 3s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.load-planet::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:repeating-linear-gradient(
+    170deg,transparent 0%,transparent 18%,
+    rgba(0,0,0,0.15) 18%,rgba(0,0,0,0.15) 22%,
+    transparent 22%,transparent 40%,
+    rgba(139,37,0,0.3) 40%,rgba(139,37,0,0.3) 45%
+  );
+}
+@keyframes pulsePlanet{0%,100%{box-shadow:0 0 60px rgba(193,68,14,0.6),0 0 120px rgba(193,68,14,0.2)}50%{box-shadow:0 0 90px rgba(232,101,26,0.8),0 0 160px rgba(193,68,14,0.3)}}
+.load-rings{position:absolute;width:240px;height:70px;border-radius:50%;border:1.5px solid rgba(193,68,14,0.35);top:50%;left:50%;transform:translate(-50%,-50%) rotateX(75deg);pointer-events:none}
+.load-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(22px,5vw,42px);letter-spacing:0.15em;color:#fff;text-shadow:0 0 30px var(--mars3)}
+.load-sub{font-size:11px;letter-spacing:0.35em;color:var(--mars3);text-transform:uppercase}
+.load-bar-wrap{width:min(360px,80vw);height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.load-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--mars),var(--mars3),var(--gold));border-radius:3px;transition:width 0.4s ease;box-shadow:0 0 10px var(--mars3)}
+.load-status{font-size:10px;letter-spacing:0.2em;color:rgba(255,255,255,0.45);min-height:16px}
+
+/* ===== MAIN MENU ===== */
+#mainMenu{
+  position:fixed;inset:0;z-index:1000;display:none;
+  background:radial-gradient(ellipse at 20% 50%,#1a0800 0%,#080100 50%,#000 100%);
+  overflow:hidden;
+}
+#menuStars{position:absolute;inset:0;pointer-events:none}
+.menu-planet{
+  position:absolute;right:-100px;top:50%;transform:translateY(-50%);
+  width:clamp(280px,48vw,580px);height:clamp(280px,48vw,580px);border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#e8651a,#c1440e 35%,#8b2500 65%,#3a0e00);
+  box-shadow:0 0 100px rgba(193,68,14,0.5),-80px 0 100px rgba(0,0,0,0.8);
+  overflow:hidden;animation:menuPlanetPulse 6s ease-in-out infinite;
+}
+.menu-planet::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:repeating-linear-gradient(
+    160deg,transparent 0%,transparent 15%,
+    rgba(0,0,0,0.1) 15%,rgba(0,0,0,0.1) 20%,
+    transparent 20%,transparent 35%,
+    rgba(100,20,0,0.22) 35%,rgba(100,20,0,0.22) 42%
+  );
+}
+@keyframes menuPlanetPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.08)}}
+.menu-left{
+  position:absolute;left:0;top:0;bottom:0;
+  width:min(500px,100%);
+  display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(20px,5vw,80px);gap:18px;
+}
+.menu-logo-top{font-family:'Orbitron',monospace;font-weight:400;font-size:clamp(9px,1.5vw,13px);letter-spacing:0.55em;color:var(--mars3);text-transform:uppercase;margin-bottom:2px}
+.menu-logo-main{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(30px,6vw,68px);letter-spacing:0.04em;color:#fff;line-height:0.88;text-shadow:0 0 40px var(--mars)}
+.menu-logo-sub{font-family:'Orbitron',monospace;font-weight:400;font-size:clamp(11px,1.8vw,17px);letter-spacing:0.45em;color:var(--mars3)}
+.menu-desc{font-size:11px;line-height:1.9;color:rgba(255,255,255,0.35);max-width:380px;letter-spacing:0.04em}
+.menu-divider{width:50px;height:1px;background:linear-gradient(90deg,var(--mars),transparent)}
+.menu-buttons{display:flex;flex-direction:column;gap:10px}
+.menu-btn{
+  position:relative;font-family:'Orbitron',monospace;font-weight:700;font-size:12px;
+  letter-spacing:0.2em;text-transform:uppercase;padding:15px 28px;
+  background:rgba(193,68,14,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;
+  transition:all 0.18s;overflow:hidden;text-align:left;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
+}
+.menu-btn::before{content:'';position:absolute;inset:0;background:var(--mars);transform:translateX(-101%);transition:transform 0.18s;z-index:0}
+.menu-btn:hover::before{transform:translateX(0)}
+.menu-btn:hover{border-color:var(--mars3);box-shadow:0 0 18px rgba(193,68,14,0.35)}
+.menu-btn span{position:relative;z-index:1}
+.menu-btn .bi{margin-right:10px;color:var(--mars3)}
+.menu-btn:hover .bi{color:#fff}
+.btn-primary{border-color:rgba(232,101,26,0.7);background:rgba(193,68,14,0.18)}
+.menu-stats{display:flex;gap:28px;margin-top:4px}
+.stat-item{display:flex;flex-direction:column;gap:2px}
+.stat-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--mars3)}
+.stat-lbl{font-size:9px;letter-spacing:0.18em;color:rgba(255,255,255,0.28);text-transform:uppercase}
+.menu-version{position:absolute;bottom:20px;left:clamp(20px,5vw,80px);font-size:9px;letter-spacing:0.2em;color:rgba(255,255,255,0.18)}
+.menu-controls{font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.25);line-height:1.8}
+
+/* ===== MULTIPLAYER PANEL ===== */
+#mpPanel{
+  position:fixed;inset:0;z-index:1001;display:none;
+  background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+.mp-box{
+  background:var(--panel);border:1px solid var(--border);
+  width:min(460px,94vw);padding:32px;
+  clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px));
+  position:relative;
+}
+.mp-title{font-family:'Orbitron',monospace;font-weight:700;font-size:16px;letter-spacing:0.15em;color:var(--mars3);margin-bottom:20px}
+.mp-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);overflow:hidden}
+.mp-tab{flex:1;padding:11px;text-align:center;font-family:'Orbitron',monospace;font-size:10px;letter-spacing:0.15em;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.35);transition:all 0.18s}
+.mp-tab.active{background:var(--mars);color:#fff}
+.mp-section{display:none;flex-direction:column;gap:12px}
+.mp-section.active{display:flex}
+.mp-label{font-size:9px;letter-spacing:0.22em;color:rgba(255,255,255,0.38);text-transform:uppercase;margin-bottom:3px}
+.mp-input{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);color:#fff;font-family:'Share Tech Mono',monospace;
+  font-size:15px;letter-spacing:0.3em;text-transform:uppercase;outline:none;text-align:center;
+  transition:border-color 0.2s;
+}
+.mp-input:focus{border-color:var(--mars3)}
+.mp-input::placeholder{color:rgba(255,255,255,0.18);letter-spacing:0.2em;font-size:11px}
+.mp-name{letter-spacing:0.05em;text-align:left;text-transform:none;font-size:14px}
+.mp-btn{
+  padding:13px;background:linear-gradient(135deg,var(--mars),var(--mars2));
+  border:none;color:#fff;font-family:'Orbitron',monospace;font-weight:700;font-size:12px;
+  letter-spacing:0.2em;cursor:pointer;transition:all 0.18s;text-transform:uppercase;
+}
+.mp-btn:hover{filter:brightness(1.18);box-shadow:0 0 18px rgba(193,68,14,0.45)}
+.mp-btn:disabled{opacity:0.35;cursor:not-allowed}
+.mp-status{font-size:11px;color:var(--cyan);letter-spacing:0.1em;text-align:center;min-height:18px;margin-top:4px}
+.mp-room-display{
+  background:rgba(0,255,231,0.07);border:1px solid rgba(0,255,231,0.25);
+  padding:18px;text-align:center;display:none;
+}
+.mp-room-code{font-family:'Orbitron',monospace;font-size:30px;font-weight:900;letter-spacing:0.5em;color:var(--cyan);text-shadow:0 0 20px rgba(0,255,231,0.5)}
+.mp-room-hint{font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px;letter-spacing:0.1em}
+.mp-back{background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:0.1em;margin-top:6px;padding:4px 0;transition:color 0.18s;display:flex;align-items:center;gap:6px}
+.mp-back:hover{color:rgba(255,255,255,0.7)}
+
+/* ===== GAME ===== */
+#gameContainer{position:fixed;inset:0;display:none}
+#c{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+
+/* ===== HUD ===== */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:100}
+
+.hud-top{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(0,0,0,0.72) 0%,transparent 100%);
+  padding:8px 14px;gap:6px;
+}
+.hud-brand{font-family:'Orbitron',monospace;font-size:clamp(9px,1.6vw,13px);font-weight:700;letter-spacing:0.15em;color:var(--mars3);display:flex;align-items:center;gap:5px}
+.hud-sep{width:1px;height:20px;background:rgba(255,255,255,0.1)}
+.hud-stat{display:flex;align-items:center;gap:5px;padding:0 8px}
+.hud-stat-ico{font-size:14px}
+.hud-stat-val{font-family:'Orbitron',monospace;font-size:clamp(11px,1.8vw,15px);font-weight:700;color:#fff}
+.hud-stat-lbl{font-size:8px;letter-spacing:0.15em;color:rgba(255,255,255,0.38);text-transform:uppercase}
+.hud-mission{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.45)}
+.hud-pbar{width:72px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+.hud-pfill{height:100%;background:linear-gradient(90deg,var(--cyan2),var(--cyan));border-radius:2px;transition:width 0.5s}
+.hud-ppct{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--cyan)}
+
+/* Side panels */
+.hud-left-panel{position:absolute;top:56px;left:12px;display:flex;flex-direction:column;gap:6px}
+.hud-right-panel{position:absolute;top:56px;right:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hud-pill{
+  background:var(--panel);border:1px solid var(--border);
+  padding:5px 10px;display:flex;flex-direction:column;gap:1px;
+}
+.pill-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold)}
+.pill-lbl{font-size:8px;letter-spacing:0.15em;color:rgba(255,255,255,0.3);text-transform:uppercase}
+.hud-compass-row{display:flex;gap:6px;align-items:stretch}
+.hud-dir{
+  background:var(--panel);border:1px solid var(--border);
+  padding:5px 10px;font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  color:var(--mars3);display:flex;align-items:center;
+}
+
+/* Bottom panels */
+.hud-bottom-left{position:absolute;bottom:12px;left:12px;display:flex;flex-direction:column;gap:6px}
+.hud-bottom-right{position:absolute;bottom:12px;right:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hud-map-wrap{background:var(--panel);border:1px solid var(--border);padding:6px;display:flex;flex-direction:column;gap:4px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.hud-map-lbl{font-size:8px;letter-spacing:0.25em;color:var(--mars3);text-align:center;text-transform:uppercase}
+.hud-radar-wrap{background:var(--panel);border:1px solid rgba(0,255,231,0.28);padding:6px;display:flex;flex-direction:column;gap:4px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.hud-radar-lbl{font-size:8px;letter-spacing:0.25em;color:var(--cyan2);text-align:center;text-transform:uppercase}
+.radar-legend{display:flex;gap:8px;justify-content:center}
+.rl{display:flex;align-items:center;gap:3px;font-size:7px;letter-spacing:0.08em;color:rgba(255,255,255,0.45)}
+.rldot{width:5px;height:5px;border-radius:50%}
+
+/* Collect prompt */
+#collectPrompt{
+  position:absolute;bottom:calc(50% - 30px);left:50%;transform:translateX(-50%);
+  background:var(--panel);border:1px solid rgba(0,255,231,0.4);
+  padding:9px 18px;display:none;align-items:center;gap:9px;
+  font-size:11px;letter-spacing:0.1em;color:var(--cyan);
+  animation:cpulse 1.2s ease-in-out infinite;white-space:nowrap;
+}
+@keyframes cpulse{0%,100%{box-shadow:0 0 6px rgba(0,255,231,0.2)}50%{box-shadow:0 0 18px rgba(0,255,231,0.55)}}
+.ckey{background:rgba(0,255,231,0.14);border:1px solid rgba(0,255,231,0.5);padding:2px 8px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--cyan)}
+
+/* Toast */
+#toast{
+  position:absolute;top:72px;left:50%;transform:translateX(-50%);
+  background:var(--panel);border:1px solid var(--mars3);
+  padding:9px 18px;font-size:11px;letter-spacing:0.08em;color:var(--gold);
+  display:none;text-align:center;white-space:nowrap;pointer-events:none;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+
+/* Mission complete */
+#missionComplete{
+  position:absolute;inset:0;background:rgba(0,0,0,0.86);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  backdrop-filter:blur(5px);pointer-events:all;
+}
+.mc-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(22px,5vw,46px);letter-spacing:0.14em;color:var(--gold);text-shadow:0 0 40px rgba(255,209,102,0.6)}
+.mc-sub{font-size:12px;letter-spacing:0.2em;color:rgba(255,255,255,0.45);text-transform:uppercase}
+.mc-stats{display:flex;gap:28px;margin:6px 0}
+.mc-stat{display:flex;flex-direction:column;align-items:center;gap:3px}
+.mc-stat-val{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--mars3)}
+.mc-stat-lbl{font-size:9px;letter-spacing:0.15em;color:rgba(255,255,255,0.38);text-transform:uppercase}
+.mc-btn{padding:13px 38px;background:linear-gradient(135deg,var(--mars),var(--mars2));border:none;color:#fff;font-family:'Orbitron',monospace;font-weight:700;font-size:12px;letter-spacing:0.2em;cursor:pointer;margin-top:6px;transition:all 0.18s;pointer-events:all;text-transform:uppercase}
+.mc-btn:hover{filter:brightness(1.2);box-shadow:0 0 22px rgba(193,68,14,0.5)}
+
+/* MP badge + conn */
+#mpBadge{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid rgba(0,255,231,0.25);padding:4px 12px;font-size:9px;letter-spacing:0.15em;color:var(--cyan);display:none;white-space:nowrap}
+#connIndicator{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);padding:4px 12px;font-size:8px;letter-spacing:0.15em;display:none;gap:5px;align-items:center;white-space:nowrap}
+.cndot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* Mobile controls */
+#mobileControls{position:fixed;inset:0;pointer-events:none;z-index:200;display:none}
+#joystickZone{position:absolute;bottom:16px;left:16px;width:130px;height:130px;pointer-events:all}
+#mobileCollect{
+  position:absolute;bottom:48px;right:24px;
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(0,255,231,0.12);border:2px solid rgba(0,255,231,0.4);
+  color:var(--cyan);font-family:'Orbitron',monospace;font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  cursor:pointer;pointer-events:all;letter-spacing:0.04em;
+  transition:background 0.15s;
+}
+#mobileCollect:active{background:rgba(0,255,231,0.3)}
+#touchLook{position:absolute;right:0;top:0;width:55%;height:85%;pointer-events:all}
+
+/* Scrollbar hide */
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:200px">
+    <div class="load-planet"></div>
+    <div class="load-rings"></div>
+  </div>
+  <div class="load-title">MARS EXPLORER</div>
+  <div class="load-sub">Rover Mission · Red Planet Expedition</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-status" id="loadStatus">Initializing systems...</div>
+</div>
+
+<!-- MAIN MENU -->
+<div id="mainMenu">
+  <canvas id="menuStars"></canvas>
+  <div class="menu-planet"></div>
+  <div class="menu-left">
+    <div>
+      <div class="menu-logo-top">NASA × ROVER DIVISION</div>
+      <div class="menu-logo-main">MARS<br>EXPLORER</div>
+      <div class="menu-logo-sub">ROVER MISSION</div>
+    </div>
+    <div class="menu-desc">Two rovers deployed to the Martian surface. Locate water-bearing mineral deposits using iron radar arrays. Scale Olympus Mons. Survive the red dust.</div>
+    <div class="menu-divider"></div>
+    <div class="menu-buttons">
+      <button class="menu-btn btn-primary" onclick="startSinglePlayer()">
+        <span><span class="bi">▶</span>SINGLE PLAYER</span>
+      </button>
+      <button class="menu-btn" onclick="showMpPanel()">
+        <span><span class="bi">⬡</span>MULTIPLAYER CO-OP</span>
+      </button>
+    </div>
+    <div class="menu-stats">
+      <div class="stat-item"><div class="stat-val">2</div><div class="stat-lbl">Rovers</div></div>
+      <div class="stat-item"><div class="stat-val">15</div><div class="stat-lbl">Water Minerals</div></div>
+      <div class="stat-item"><div class="stat-val">30</div><div class="stat-lbl">Iron Nodes</div></div>
+    </div>
+    <div class="menu-controls">
+      WASD / Arrow Keys — Move &nbsp;|&nbsp; Right-click drag — Camera &nbsp;|&nbsp; Scroll — Zoom &nbsp;|&nbsp; E — Collect
+    </div>
+  </div>
+  <div class="menu-version">v2.0 · MARS EXPLORER · MISSION ARES</div>
+</div>
+
+<!-- MULTIPLAYER PANEL -->
+<div id="mpPanel">
+  <div class="mp-box">
+    <div class="mp-title">◈ MULTIPLAYER CO-OP</div>
+    <div style="margin-bottom:14px">
+      <div class="mp-label">Your Call Sign</div>
+      <input class="mp-input mp-name" id="playerName" placeholder="Enter your name" maxlength="16">
+    </div>
+    <div class="mp-tabs">
+      <button class="mp-tab active" onclick="switchMpTab('create')">CREATE ROOM</button>
+      <button class="mp-tab" onclick="switchMpTab('join')">JOIN ROOM</button>
+    </div>
+    <div class="mp-section active" id="mpCreate">
+      <div style="font-size:11px;color:rgba(255,255,255,0.38);letter-spacing:0.04em;line-height:1.9">Create a mission room and share the code with your co-pilot. Two rovers, one mission.</div>
+      <button class="mp-btn" id="btnCreateRoom" onclick="createRoom()">⊕ CREATE ROOM</button>
+      <div class="mp-room-display" id="roomDisplay">
+        <div class="mp-label">Room Code</div>
+        <div class="mp-room-code" id="roomCodeDisplay">----</div>
+        <div class="mp-room-hint">Share this code with your co-pilot</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cyan);letter-spacing:0.1em" id="waitingStatus">⌛ Waiting for co-pilot...</div>
+      </div>
+    </div>
+    <div class="mp-section" id="mpJoin">
+      <div class="mp-label">Room Code</div>
+      <input class="mp-input" id="roomCodeInput" placeholder="XXXX" maxlength="4" oninput="this.value=this.value.toUpperCase()">
+      <button class="mp-btn" id="btnJoinRoom" onclick="joinRoom()">→ JOIN MISSION</button>
+    </div>
+    <div class="mp-status" id="mpStatus"></div>
+    <button class="mp-back" onclick="hideMpPanel()">← Back to Menu</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="gameContainer">
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <!-- Top bar -->
+    <div class="hud-top">
+      <div class="hud-brand">
+        <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c1440e"/><circle cx="12" cy="12" r="4" fill="#8b2500"/></svg>
+        MARS
+      </div>
+      <div class="hud-sep"></div>
+      <div class="hud-stat">
+        <span class="hud-stat-ico">⬡</span>
+        <div><div class="hud-stat-val" id="ironCount">0</div><div class="hud-stat-lbl">Iron</div></div>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-ico" style="color:var(--cyan)">◈</span>
+        <div><div class="hud-stat-val" id="waterCount">0</div><div class="hud-stat-lbl">Water Minerals</div></div>
+      </div>
+      <div class="hud-mission">
+        <span>MISSION</span>
+        <div class="hud-pbar"><div class="hud-pfill" id="missionFill" style="width:0%"></div></div>
+        <div class="hud-ppct" id="missionPct">0%</div>
+      </div>
+    </div>
+    <!-- Left side: altitude + compass -->
+    <div class="hud-left-panel">
+      <div class="hud-compass-row">
+        <div class="hud-dir" id="compassDir">N</div>
+        <div class="hud-pill"><div class="pill-val" id="speedVal">0.0</div><div class="pill-lbl">m/s</div></div>
+      </div>
+      <div class="hud-pill"><div class="pill-val" id="altVal">0m</div><div class="pill-lbl">Altitude</div></div>
+    </div>
+    <!-- Bottom left: minimap -->
+    <div class="hud-bottom-left">
+      <div class="hud-map-wrap">
+        <div class="hud-map-lbl">SURFACE MAP</div>
+        <canvas id="minimapCanvas" width="128" height="128"></canvas>
+      </div>
+    </div>
+    <!-- Bottom right: radar -->
+    <div class="hud-bottom-right">
+      <div class="hud-radar-wrap">
+        <div class="hud-radar-lbl">RADAR</div>
+        <canvas id="radarCanvas" width="128" height="128"></canvas>
+        <div class="radar-legend">
+          <div class="rl"><div class="rldot" style="background:#b05a2f"></div>Fe</div>
+          <div class="rl"><div class="rldot" style="background:#00ffe7"></div>H₂O</div>
+          <div class="rl"><div class="rldot" style="background:#4488ff"></div>P2</div>
+        </div>
+      </div>
+    </div>
+    <!-- Collect prompt -->
+    <div id="collectPrompt"><span class="ckey">E</span><span id="collectText">Collect</span></div>
+    <!-- Toast -->
+    <div id="toast"></div>
+    <!-- MP badge -->
+    <div id="mpBadge">◈ MULTIPLAYER — CO-OP MISSION</div>
+    <!-- Conn indicator -->
+    <div id="connIndicator"><div class="cndot"></div><span>CO-PILOT ONLINE</span></div>
+    <!-- Mission complete -->
+    <div id="missionComplete">
+      <div class="mc-title">MISSION COMPLETE</div>
+      <div class="mc-sub">All water minerals located</div>
+      <div class="mc-stats">
+        <div class="mc-stat"><div class="mc-stat-val" id="mcIron">0</div><div class="mc-stat-lbl">Iron Scanned</div></div>
+        <div class="mc-stat"><div class="mc-stat-val" id="mcWater">0</div><div class="mc-stat-lbl">Water Found</div></div>
+        <div class="mc-stat"><div class="mc-stat-val" id="mcTime">0:00</div><div class="mc-stat-lbl">Mission Time</div></div>
+      </div>
+      <button class="mc-btn" onclick="returnToMenu()">RETURN TO BASE</button>
+    </div>
+  </div>
+  <!-- Mobile controls -->
+  <div id="mobileControls">
+    <div id="joystickZone"></div>
+    <div id="mobileCollect" onclick="collectNearest()">COLLECT</div>
+    <div id="touchLook"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+<script>
+'use strict';
+// ================================================================
+//  CONFIG
+// ================================================================
+const isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.innerWidth<768;
+const MAP=900, RADAR_R=230, TOTAL_WATER=15, TOTAL_IRON=30;
+const ROVER_SPEED=isMobile?16:22;
+const ROVER_FRICTION=0.06;
+
+// ================================================================
+//  SCENE GLOBALS
+// ================================================================
+let scene,camera,renderer,clock;
+let terrainMesh,dustGroup;
+let roverGroup,remoteGroup;
+let minerals=[], collected=new Set();
+let ironCount=0, waterCount=0;
+let roverPos=new THREE.Vector3(0,0,0);
+let roverVel=new THREE.Vector3(0,0,0);
+let roverFacing=0, roverSpeed=0;
+let camYaw=0, camPitch=0.38, camDist=14;
+let camTarget=new THREE.Vector3();
+let keys={}, mouseDown=false, lastMX=0, lastMY=0;
+let joystickDir={x:0,y:0};
+let nearestMineral=null;
+let animId=null;
+let gameStartTime=0;
+// ── Multiplayer (Worker WebSocket) ────────────────────────────
+let ws=null, isHost=false, isMP=false;
+let mpToken=null, mpRole=null, mpRoomCode=null;
+let syncT=0, wsReconnectTimer=null;
+let playerName='ROVER-1';
+
+// !! SET THIS to your deployed Worker URL after `wrangler deploy`
+const WORKER_URL = 'https://mars-explorer-server.YOUR-SUBDOMAIN.workers.dev';
+
+// ================================================================
+//  TERRAIN HEIGHT
+// ================================================================
+function getH(x,z){
+  const u=x/MAP, v=z/MAP;
+  let h=0;
+  // Multi-octave noise approximation
+  h+=Math.sin(u*6.2)*Math.cos(v*6.2)*3.2;
+  h+=Math.sin(u*13+0.7)*Math.cos(v*10+1.4)*1.6;
+  h+=Math.sin(u*24+2)*Math.cos(v*22+3)*0.7;
+  h+=Math.sin(u*48+5)*Math.cos(v*48+6)*0.28;
+  h+=Math.sin(u*96)*Math.cos(v*96)*0.1;
+  // Olympus Mons — center at (420,-280)
+  const od=Math.hypot(x-420,z+280);
+  if(od<420){
+    const p=Math.max(0,1-od/420);
+    const sm=p*p*(3-2*p);
+    h+=sm*188;
+  }
+  // Additional volcano
+  const vd=Math.hypot(x+300,z-150);
+  if(vd<160){ const p=Math.max(0,1-vd/160); h+=p*p*(3-2*p)*42; }
+  // Craters
+  const craters=[[-190,175,58,9],[148,-345,72,11],[315,195,48,7],[-330,-190,62,10],[-105,315,42,6],[195,98,38,6],[8,-148,84,13],[250,-100,50,8],[-50,50,35,5]];
+  for(const[cx,cz,cr,cd]of craters){
+    const d=Math.hypot(x-cx,z-cz);
+    if(d<cr){const p=d/cr; h-=cd*(1-p*p*p);}
+  }
+  return h;
+}
+
+// ================================================================
+//  LOADING
+// ================================================================
+const setLoad=(pct,msg)=>{
+  document.getElementById('loadBar').style.width=pct+'%';
+  document.getElementById('loadStatus').textContent=msg;
+};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function bootGame(){
+  setLoad(5,'Booting Three.js renderer...');
+  await sleep(100);
+  initRenderer();
+  setLoad(15,'Generating Martian terrain...');
+  await sleep(100);
+  buildTerrain();
+  setLoad(28,'Applying surface texture...');
+  await sleep(80);
+  await applyTexture();
+  setLoad(42,'Placing mineral deposits...');
+  await sleep(80);
+  placeMinerals();
+  setLoad(54,'Building atmosphere...');
+  await sleep(80);
+  buildSky();
+  buildLights();
+  buildDust();
+  setLoad(68,'Loading rover model...');
+  await sleep(100);
+  await loadRover();
+  setLoad(82,'Initializing HUD systems...');
+  await sleep(100);
+  bindControls();
+  window.addEventListener('resize',onResize);
+  setLoad(96,'Pre-flight check...');
+  await sleep(200);
+  setLoad(100,'Liftoff!');
+  await sleep(400);
+  const ls=document.getElementById('loadingScreen');
+  ls.style.opacity='0';
+  setTimeout(()=>{ ls.style.display='none'; showMenu(); },750);
+}
+
+function initRenderer(){
+  const canvas=document.getElementById('c');
+  renderer=new THREE.WebGLRenderer({canvas,antialias:!isMobile,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,isMobile?1.5:2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.shadowMap.enabled=!isMobile;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.15;
+  scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x7a2000,0.0016);
+  camera=new THREE.PerspectiveCamera(68,window.innerWidth/window.innerHeight,0.1,3000);
+  clock=new THREE.Clock();
+}
+
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+
+// ================================================================
+//  TERRAIN
+// ================================================================
+function buildTerrain(){
+  const segs=isMobile?100:150;
+  const geo=new THREE.PlaneGeometry(MAP,MAP,segs,segs);
+  geo.rotateX(-Math.PI/2);
+  const pos=geo.attributes.position;
+  const cols=new Float32Array(pos.count*3);
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), z=pos.getZ(i);
+    const h=getH(x,z);
+    pos.setY(i,h);
+    // Vertex color based on height/slope
+    const t=Math.max(0,Math.min(1,h/100));
+    const r=0.52+t*0.25+Math.random()*0.06;
+    const g=0.18+t*0.08+Math.random()*0.03;
+    const b=0.04+Math.random()*0.025;
+    cols[i*3]=r; cols[i*3+1]=g; cols[i*3+2]=b;
+  }
+  geo.computeVertexNormals();
+  geo.setAttribute('color',new THREE.BufferAttribute(cols,3));
+  const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.94,metalness:0.04});
+  terrainMesh=new THREE.Mesh(geo,mat);
+  terrainMesh.receiveShadow=true;
+  scene.add(terrainMesh);
+}
+
+async function applyTexture(){
+  return new Promise(res=>{
+    new THREE.TextureLoader().load(
+      '1773986894497_image.png',
+      tex=>{
+        tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+        tex.repeat.set(3,3);
+        terrainMesh.material.map=tex;
+        terrainMesh.material.vertexColors=false;
+        terrainMesh.material.needsUpdate=true;
+        res();
+      },
+      undefined, ()=>res()
+    );
+  });
+}
+
+// ================================================================
+//  SKY
+// ================================================================
+function buildSky(){
+  // Gradient sphere
+  const geo=new THREE.SphereGeometry(2600,24,12);
+  const mat=new THREE.ShaderMaterial({
+    uniforms:{top:{value:new THREE.Color(0x100300)},bot:{value:new THREE.Color(0xaa4415)}},
+    vertexShader:`varying float vY; void main(){ vY=normalize(position).y; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader:`uniform vec3 top,bot; varying float vY; void main(){ float t=clamp(vY,0.0,1.0); gl_FragColor=vec4(mix(bot,top,pow(t,0.4)),1.0); }`,
+    side:THREE.BackSide
+  });
+  scene.add(new THREE.Mesh(geo,mat));
+  // Stars
+  const N=1200, sp=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+    const r=2400+Math.random()*80;
+    sp[i*3]=r*Math.sin(ph)*Math.cos(th);
+    sp[i*3+1]=Math.abs(r*Math.cos(ph))+100;
+    sp[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+  }
+  const sg=new THREE.BufferGeometry();
+  sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+  scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:1.4,sizeAttenuation:true,transparent:true,opacity:0.8})));
+  // Phobos
+  const pm=new THREE.Mesh(new THREE.SphereGeometry(10,8,6),new THREE.MeshStandardMaterial({color:0x7a7870,roughness:1}));
+  pm.position.set(-900,450,-1300);
+  scene.add(pm);
+}
+
+// ================================================================
+//  LIGHTING
+// ================================================================
+function buildLights(){
+  scene.add(new THREE.AmbientLight(0xff8855,0.45));
+  const sun=new THREE.DirectionalLight(0xffcc88,1.5);
+  sun.position.set(400,320,200);
+  sun.castShadow=!isMobile;
+  if(!isMobile){
+    sun.shadow.mapSize.set(2048,2048);
+    Object.assign(sun.shadow.camera,{near:1,far:1400,left:-650,right:650,top:650,bottom:-650});
+  }
+  scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0xcc6633,0x1a0500,0.38));
+}
+
+// ================================================================
+//  DUST
+// ================================================================
+function buildDust(){
+  dustGroup=new THREE.Group();
+  const N=800, pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-0.5)*90;
+    pos[i*3+1]=Math.random()*18;
+    pos[i*3+2]=(Math.random()-0.5)*90;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:0xcc6633,size:isMobile?0.25:0.18,transparent:true,opacity:0.38,sizeAttenuation:true});
+  dustGroup.add(new THREE.Points(geo,mat));
+  scene.add(dustGroup);
+}
+
+// ================================================================
+//  MINERALS
+// ================================================================
+function placeMinerals(){
+  // Iron cluster centers
+  const ironCenters=[
+    [-185,165],[-210,205],[-160,140],[-230,195],[-170,178],
+    [130,-330],[155,-350],[108,-305],[165,-365],[142,-318],
+    [302,182],[278,204],[328,162],[315,196],[288,174],
+    [-325,-178],[-300,-205],[-345,-158],[-312,-196],[-335,-178],
+    [-95,305],[-115,328],[-72,282],[-102,348],[-82,308],
+    [182,92],[204,114],[158,72],[196,134],[176,88],
+  ];
+  // Water mineral centers — near iron clusters
+  const waterCenters=[
+    [-198,182],[148,-338],[308,186],[-318,-188],[-98,318],
+    [186,96],[62,-82],[-58,62],[202,-202],[-202,202],
+    [102,202],[-98,-102],[252,52],[-48,-252],[52,252]
+  ];
+  for(let i=0;i<ironCenters.length;i++){
+    const[bx,bz]=ironCenters[i];
+    const x=bx+(Math.random()-0.5)*22;
+    const z=bz+(Math.random()-0.5)*22;
+    addMineral(x,getH(x,z)+1.3,z,'iron',i);
+  }
+  for(let i=0;i<waterCenters.length;i++){
+    const[bx,bz]=waterCenters[i];
+    const x=bx+(Math.random()-0.5)*35;
+    const z=bz+(Math.random()-0.5)*35;
+    addMineral(x,getH(x,z)+1.3,z,'water',ironCenters.length+i);
+  }
+}
+
+function addMineral(x,y,z,type,id){
+  const g=new THREE.Group();
+  g.position.set(x,y,z);
+  g.userData={type,id,collected:false,baseY:y,seed:Math.random()*Math.PI*2};
+  if(type==='iron'){
+    const geo=new THREE.OctahedronGeometry(0.65,0);
+    const mat=new THREE.MeshStandardMaterial({color:0xb05a2f,roughness:0.55,metalness:0.75,emissive:0x4a1a08,emissiveIntensity:0.35});
+    const m=new THREE.Mesh(geo,mat);
+    m.castShadow=true;
+    g.add(m);
+    // Small shard
+    const s=new THREE.Mesh(new THREE.OctahedronGeometry(0.3,0),mat.clone());
+    s.position.set(0.8,0.3,0.3); s.rotation.set(0.5,0.8,0);
+    g.add(s);
+    g.add(new THREE.PointLight(0xb05a2f,0.55,14));
+  } else {
+    // Water crystal
+    const geo=new THREE.OctahedronGeometry(0.85,1);
+    const mat=new THREE.MeshStandardMaterial({
+      color:0x00ffe7,roughness:0.08,metalness:0.25,
+      emissive:0x00ffe7,emissiveIntensity:0.7,
+      transparent:true,opacity:0.88,side:THREE.DoubleSide
+    });
+    g.add(Object.assign(new THREE.Mesh(geo,mat),{castShadow:true}));
+    // Orbital ring
+    const ring=new THREE.Mesh(
+      new THREE.TorusGeometry(1.25,0.055,8,26),
+      new THREE.MeshBasicMaterial({color:0x00ffe7,transparent:true,opacity:0.45})
+    );
+    ring.rotation.x=Math.PI/2;
+    g.add(ring);
+    // Second tilted ring
+    const ring2=new THREE.Mesh(
+      new THREE.TorusGeometry(1.0,0.04,6,20),
+      new THREE.MeshBasicMaterial({color:0x88ffee,transparent:true,opacity:0.3})
+    );
+    ring2.rotation.set(0.6,0.4,0);
+    g.add(ring2);
+    const pl=new THREE.PointLight(0x00ffe7,1.2,22);
+    g.add(pl);
+  }
+  minerals.push(g);
+  scene.add(g);
+}
+
+// ================================================================
+//  ROVER
+// ================================================================
+async function loadRover(){
+  roverGroup=new THREE.Group();
+  roverGroup.position.copy(roverPos);
+  scene.add(roverGroup);
+  remoteGroup=new THREE.Group();
+  remoteGroup.visible=false;
+  scene.add(remoteGroup);
+  return new Promise(res=>{
+    if(typeof THREE.GLTFLoader==='undefined'){
+      buildProceduralRover(roverGroup,false);
+      buildProceduralRover(remoteGroup,true);
+      return res();
+    }
+    const loader=new THREE.GLTFLoader();
+    loader.load('low_poly_rover__1_.glb',
+      gltf=>{
+        const model=gltf.scene;
+        model.scale.setScalar(2.6);
+        model.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
+        roverGroup.add(model);
+        // Clone for remote
+        const clone=gltf.scene.clone(true);
+        clone.scale.setScalar(2.6);
+        clone.traverse(n=>{
+          if(n.isMesh){
+            n.material=n.material.clone();
+            n.material.color.setHex(0x4488ff);
+            n.material.emissive=new THREE.Color(0x001133);
+            n.material.emissiveIntensity=0.3;
+          }
+        });
+        remoteGroup.add(clone);
+        remoteGroup.add(new THREE.PointLight(0x4488ff,1,18));
+        res();
+      },
+      undefined,
+      ()=>{ buildProceduralRover(roverGroup,false); buildProceduralRover(remoteGroup,true); res(); }
+    );
+  });
+}
+
+function buildProceduralRover(g,isRemote){
+  const bodyColor=isRemote?0x4466cc:0xccaa66;
+  const emColor=isRemote?0x112244:0x0;
+  const body=new THREE.Mesh(
+    new THREE.BoxGeometry(3.2,0.7,2.0),
+    new THREE.MeshStandardMaterial({color:bodyColor,roughness:0.55,metalness:0.45,emissive:emColor,emissiveIntensity:isRemote?0.25:0})
+  );
+  body.position.y=0.9; body.castShadow=true;
+  g.add(body);
+  // Solar panel
+  const panel=new THREE.Mesh(
+    new THREE.BoxGeometry(1.6,0.04,1.1),
+    new THREE.MeshStandardMaterial({color:isRemote?0x1a2a5a:0x162238,roughness:0.25,metalness:0.9,emissive:isRemote?0x0a1a3a:0x0a1530,emissiveIntensity:0.6})
+  );
+  panel.position.set(0,1.32,0); panel.rotation.x=0.28;
+  g.add(panel);
+  // Mast
+  g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.9,6),new THREE.MeshStandardMaterial({color:0x888880,roughness:0.3,metalness:0.9})),{position:new THREE.Vector3(-0.5,2.15,0)}));
+  // Wheels
+  const wm=new THREE.MeshStandardMaterial({color:isRemote?0x223366:0x333330,roughness:0.95,metalness:0.3});
+  const wg=new THREE.CylinderGeometry(0.48,0.48,0.38,10);
+  [[-1.75,0.48,1.1],[-1.75,0.48,-1.1],[0,0.48,1.2],[0,0.48,-1.2],[1.75,0.48,1.1],[1.75,0.48,-1.1]].forEach(([wx,wy,wz])=>{
+    const w=new THREE.Mesh(wg,wm);
+    w.rotation.z=Math.PI/2; w.position.set(wx,wy,wz); w.castShadow=true;
+    g.add(w);
+  });
+  // Antenna
+  const ant=new THREE.Mesh(new THREE.SphereGeometry(0.32,8,5,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:isRemote?0x8899cc:0xddddcc,roughness:0.35,metalness:0.65,side:THREE.DoubleSide}));
+  ant.position.set(0.6,2.2,-0.6); ant.rotation.x=-0.35;
+  g.add(ant);
+  if(isRemote){ const gl=new THREE.PointLight(0x4488ff,1,16); gl.position.y=2; g.add(gl); }
+}
+
+// ================================================================
+//  CONTROLS
+// ================================================================
+function bindControls(){
+  document.addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyE') collectNearest(); if(e.code==='Escape') returnToMenu(); });
+  document.addEventListener('keyup',e=>{ keys[e.code]=false; });
+  const cv=document.getElementById('c');
+  cv.addEventListener('mousedown',e=>{ if(e.button!==0){ mouseDown=true; lastMX=e.clientX; lastMY=e.clientY; e.preventDefault(); } });
+  cv.addEventListener('mousemove',e=>{ if(mouseDown){ camYaw-=(e.clientX-lastMX)*0.005; camPitch=Math.max(0.04,Math.min(1.05,camPitch-(e.clientY-lastMY)*0.005)); lastMX=e.clientX; lastMY=e.clientY; } });
+  document.addEventListener('mouseup',()=>mouseDown=false);
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+  cv.addEventListener('wheel',e=>{ camDist=Math.max(4,Math.min(70,camDist+e.deltaY*0.02)); });
+  if(isMobile){
+    document.getElementById('mobileControls').style.display='block';
+    const jz=document.getElementById('joystickZone');
+    const jk=nipplejs.create({zone:jz,mode:'static',position:{left:'65px',bottom:'65px'},size:108,color:'rgba(193,68,14,0.65)'});
+    jk.on('move',(_,d)=>{ joystickDir.x=Math.cos(d.angle.radian)*d.force*0.75; joystickDir.y=Math.sin(d.angle.radian)*d.force*0.75; });
+    jk.on('end',()=>{ joystickDir.x=0; joystickDir.y=0; });
+    let tlId=-1, tlX=0, tlY=0;
+    const tl=document.getElementById('touchLook');
+    tl.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; tlId=t.identifier; tlX=t.clientX; tlY=t.clientY; },{passive:true});
+    tl.addEventListener('touchmove',e=>{ for(const t of e.changedTouches){ if(t.identifier===tlId){ camYaw-=(t.clientX-tlX)*0.006; camPitch=Math.max(0.04,Math.min(1.05,camPitch-(t.clientY-tlY)*0.006)); tlX=t.clientX; tlY=t.clientY; } } },{passive:true});
+  }
+}
+
+// ================================================================
+//  GAME LOOP
+// ================================================================
+function startGame(){
+  document.getElementById('gameContainer').style.display='block';
+  clock.getDelta(); // reset
+  gameStartTime=Date.now();
+  loop();
+}
+
+function loop(){
+  animId=requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),0.05);
+  tickRover(dt);
+  tickMinerals(dt);
+  tickDust(dt);
+  updateCamera();
+  drawHUD();
+  if(isMP){ syncT+=dt; if(syncT>0.09){ sendSync(); syncT=0; } }
+  renderer.render(scene,camera);
+}
+
+// ================================================================
+//  ROVER TICK
+// ================================================================
+function tickRover(dt){
+  let mx=0,mz=0;
+  if(keys['KeyW']||keys['ArrowUp'])   mz-=1;
+  if(keys['KeyS']||keys['ArrowDown']) mz+=1;
+  if(keys['KeyA']||keys['ArrowLeft']) mx-=1;
+  if(keys['KeyD']||keys['ArrowRight'])mx+=1;
+  if(isMobile){ mx+=joystickDir.x; mz-=joystickDir.y; }
+  const len=Math.hypot(mx,mz);
+  if(len>0){ mx/=len; mz/=len; }
+  const sinY=Math.sin(camYaw), cosY=Math.cos(camYaw);
+  const wx=mx*cosY+mz*sinY, wz=-mx*sinY+mz*cosY;
+  const acc=ROVER_SPEED*5;
+  const fr=Math.pow(ROVER_FRICTION,dt);
+  roverVel.x=roverVel.x*fr+(wx*ROVER_SPEED-roverVel.x)*Math.min(1,acc*dt);
+  roverVel.z=roverVel.z*fr+(wz*ROVER_SPEED-roverVel.z)*Math.min(1,acc*dt);
+  roverSpeed=Math.hypot(roverVel.x,roverVel.z);
+  const hs=MAP/2-5;
+  roverPos.x=Math.max(-hs,Math.min(hs,roverPos.x+roverVel.x*dt));
+  roverPos.z=Math.max(-hs,Math.min(hs,roverPos.z+roverVel.z*dt));
+  const ty=getH(roverPos.x,roverPos.z)+0.52;
+  roverPos.y+=(ty-roverPos.y)*0.25;
+  roverGroup.position.copy(roverPos);
+  // Slope align
+  const hF=getH(roverPos.x,roverPos.z+1.6);
+  const hB=getH(roverPos.x,roverPos.z-1.6);
+  const hL=getH(roverPos.x-1.6,roverPos.z);
+  const hR=getH(roverPos.x+1.6,roverPos.z);
+  roverGroup.rotation.x=(hF-hB)/5.5;
+  roverGroup.rotation.z=(hL-hR)/5.5;
+  // Steer
+  if(roverSpeed>0.4){
+    const td=Math.atan2(roverVel.x,roverVel.z);
+    let d=td-roverFacing;
+    while(d>Math.PI)d-=Math.PI*2;
+    while(d<-Math.PI)d+=Math.PI*2;
+    roverFacing+=d*0.14;
+  }
+  roverGroup.rotation.y=roverFacing;
+  // Dust
+  if(dustGroup){ dustGroup.position.set(roverPos.x,roverPos.y,roverPos.z); dustGroup.rotation.y+=dt*0.25; }
+  // Check nearest mineral
+  nearestMineral=null;
+  let minD=Infinity;
+  for(const m of minerals){
+    if(m.userData.collected||collected.has(m.userData.id)) continue;
+    const d=roverPos.distanceTo(m.position);
+    if(d<minD){ minD=d; nearestMineral=m; }
+  }
+  const cp=document.getElementById('collectPrompt');
+  if(nearestMineral&&minD<7){
+    cp.style.display='flex';
+    document.getElementById('collectText').textContent=nearestMineral.userData.type==='water'?'Collect Water Mineral':'Scan Iron Deposit';
+  } else { nearestMineral=null; cp.style.display='none'; }
+}
+
+// ================================================================
+//  MINERALS TICK
+// ================================================================
+function tickMinerals(dt){
+  const t=clock.getElapsedTime();
+  for(const m of minerals){
+    if(m.userData.collected||collected.has(m.userData.id)){ m.visible=false; continue; }
+    m.position.y=m.userData.baseY+Math.sin(t*1.6+m.userData.seed)*0.28;
+    m.rotation.y+=dt*(m.userData.type==='water'?1.4:0.5);
+    if(m.userData.type==='water'&&m.children[1]){ m.children[1].rotation.y+=dt*2.2; if(m.children[2]) m.children[2].rotation.x+=dt*1.5; }
+  }
+}
+
+function tickDust(dt){
+  if(!dustGroup) return;
+  const geo=dustGroup.children[0].geometry;
+  const pos=geo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    let y=pos.getY(i)+dt*(0.28+Math.sin(i)*0.1);
+    if(y>18) y=-0.5;
+    pos.setY(i,y);
+  }
+  pos.needsUpdate=true;
+}
+
+// ================================================================
+//  CAMERA
+// ================================================================
+function updateCamera(){
+  const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist;
+  const oy=Math.sin(camPitch)*camDist+2;
+  const oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist;
+  camTarget.x+=(roverPos.x-camTarget.x)*0.1;
+  camTarget.y+=(roverPos.y-camTarget.y)*0.1;
+  camTarget.z+=(roverPos.z-camTarget.z)*0.1;
+  camera.position.set(camTarget.x+ox, camTarget.y+oy, camTarget.z+oz);
+  camera.lookAt(camTarget.x, camTarget.y+1.5, camTarget.z);
+}
+
+// ================================================================
+//  HUD
+// ================================================================
+function drawHUD(){
+  // Stats
+  document.getElementById('ironCount').textContent=ironCount;
+  document.getElementById('waterCount').textContent=waterCount;
+  const pct=Math.round(waterCount/TOTAL_WATER*100);
+  document.getElementById('missionFill').style.width=pct+'%';
+  document.getElementById('missionPct').textContent=pct+'%';
+  document.getElementById('altVal').textContent=Math.max(0,roverPos.y).toFixed(0)+'m';
+  document.getElementById('speedVal').textContent=roverSpeed.toFixed(1);
+  // Compass
+  const di=Math.round(((roverFacing%(Math.PI*2)+Math.PI*2)%(Math.PI*2))/Math.PI/2*8);
+  document.getElementById('compassDir').textContent=['N','NE','E','SE','S','SW','W','NW','N'][di];
+  drawRadar();
+  drawMinimap();
+}
+
+// ================================================================
+//  RADAR
+// ================================================================
+function drawRadar(){
+  const cv=document.getElementById('radarCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=cx-3;
+  ctx.clearRect(0,0,W,H);
+  // BG
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  bg.addColorStop(0,'rgba(0,50,35,0.95)'); bg.addColorStop(1,'rgba(0,18,12,0.95)');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+  // Grid
+  ctx.strokeStyle='rgba(0,255,231,0.09)'; ctx.lineWidth=0.5;
+  [1,2,3].forEach(i=>{ ctx.beginPath(); ctx.arc(cx,cy,R*i/3,0,Math.PI*2); ctx.stroke(); });
+  ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.stroke();
+  // Sweep
+  const sa=(Date.now()/1800)%(Math.PI*2);
+  for(let i=0;i<10;i++){
+    const a=sa-i*0.1;
+    ctx.strokeStyle=`rgba(0,255,231,${Math.max(0,0.7-i*0.06)})`;
+    ctx.lineWidth=i===0?1.5:0.8;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R);
+    ctx.stroke();
+  }
+  // Minerals
+  for(const m of minerals){
+    if(m.userData.collected||collected.has(m.userData.id)) continue;
+    const dx=m.position.x-roverPos.x, dz=m.position.z-roverPos.z;
+    const dist=Math.hypot(dx,dz);
+    if(dist>RADAR_R) continue;
+    const a=Math.atan2(dx,dz)-roverFacing;
+    const nr=(dist/RADAR_R)*R*0.88;
+    const px=cx+Math.sin(a)*nr, py=cy-Math.cos(a)*nr;
+    if(m.userData.type==='iron'){
+      ctx.fillStyle='rgba(180,90,47,0.88)';
+      ctx.beginPath(); ctx.arc(px,py,2.3,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.shadowColor='#00ffe7'; ctx.shadowBlur=5;
+      ctx.fillStyle='rgba(0,255,231,0.95)';
+      ctx.beginPath(); ctx.arc(px,py,3.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+  }
+  // Remote rover
+  if(isMP&&remoteGroup.visible){
+    const dx=remoteGroup.position.x-roverPos.x, dz=remoteGroup.position.z-roverPos.z;
+    const dist=Math.hypot(dx,dz);
+    if(dist<=RADAR_R){
+      const a=Math.atan2(dx,dz)-roverFacing;
+      const nr=(dist/RADAR_R)*R*0.88;
+      ctx.shadowColor='#4488ff'; ctx.shadowBlur=7;
+      ctx.fillStyle='rgba(68,136,255,0.95)';
+      ctx.beginPath(); ctx.arc(cx+Math.sin(a)*nr, cy-Math.cos(a)*nr, 4,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+  }
+  // Self
+  ctx.shadowColor='#00ff88'; ctx.shadowBlur=8;
+  ctx.fillStyle='#00ff88';
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  // Ring
+  ctx.strokeStyle='rgba(0,255,231,0.38)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+}
+
+// ================================================================
+//  MINIMAP
+// ================================================================
+function drawMinimap(){
+  const cv=document.getElementById('minimapCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(8,3,1,0.94)'; ctx.fillRect(0,0,W,H);
+  const toM=(wx,wz)=>({x:(wx/MAP+0.5)*W, y:(wz/MAP+0.5)*H});
+  // Olympus Mons
+  const om=toM(420,-280);
+  ctx.strokeStyle='rgba(255,200,100,0.45)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(om.x,om.y,11,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='rgba(255,200,100,0.55)'; ctx.font='7px Share Tech Mono';
+  ctx.fillText('▲',om.x-4,om.y-12);
+  // Iron minerals
+  for(const m of minerals){
+    if(m.userData.collected||collected.has(m.userData.id)) continue;
+    const p=toM(m.position.x,m.position.z);
+    if(m.userData.type==='iron'){
+      ctx.fillStyle='rgba(176,90,47,0.65)'; ctx.fillRect(p.x-1,p.y-1,2,2);
+    } else {
+      ctx.shadowColor='#00ffe7'; ctx.shadowBlur=4;
+      ctx.fillStyle='rgba(0,255,231,0.92)';
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+  }
+  // Remote rover
+  if(isMP&&remoteGroup.visible){
+    const p=toM(remoteGroup.position.x,remoteGroup.position.z);
+    ctx.shadowColor='#4488ff'; ctx.shadowBlur=5;
+    ctx.fillStyle='rgba(68,136,255,0.9)';
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  // Player
+  const pp=toM(roverPos.x,roverPos.z);
+  ctx.shadowColor='#00ff88'; ctx.shadowBlur=7;
+  ctx.fillStyle='#00ff88';
+  ctx.beginPath(); ctx.arc(pp.x,pp.y,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#00ff88'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pp.x,pp.y);
+  ctx.lineTo(pp.x+Math.sin(roverFacing)*8, pp.y+Math.cos(roverFacing)*8);
+  ctx.stroke(); ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(193,68,14,0.35)'; ctx.lineWidth=1; ctx.strokeRect(0,0,W,H);
+}
+
+// ================================================================
+//  COLLECT
+// ================================================================
+function collectNearest(){
+  if(!nearestMineral) return;
+  const m=nearestMineral;
+  if(m.userData.collected||collected.has(m.userData.id)) return;
+  m.userData.collected=true;
+  collected.add(m.userData.id);
+  if(m.userData.type==='iron'){
+    ironCount++;
+    toast('⬡ Iron deposit scanned — recording coordinates');
+  } else {
+    waterCount++;
+    toast('◈ Water mineral secured! H₂O traces confirmed');
+    if(waterCount>=TOTAL_WATER) setTimeout(missionComplete,1200);
+  }
+  if(conn&&conn.open) conn.send({type:'collect',id:m.userData.id,mineralType:m.userData.type});
+  spawnFX(m.position.clone(), m.userData.type==='water'?0x00ffe7:0xb05a2f);
+}
+
+function spawnFX(pos, color){
+  const N=24;
+  const geo=new THREE.BufferGeometry();
+  const pa=new Float32Array(N*3);
+  const va=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    pa[i*3]=pos.x; pa[i*3+1]=pos.y; pa[i*3+2]=pos.z;
+    va[i*3]=(Math.random()-0.5)*6;
+    va[i*3+1]=Math.random()*5+1;
+    va[i*3+2]=(Math.random()-0.5)*6;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pa,3));
+  const mat=new THREE.PointsMaterial({color,size:0.35,transparent:true,opacity:1});
+  const pts=new THREE.Points(geo,mat);
+  scene.add(pts);
+  let life=0;
+  const tick=()=>{
+    life+=0.04;
+    mat.opacity=Math.max(0,1-life);
+    const p=pts.geometry.attributes.position;
+    for(let i=0;i<N;i++){
+      p.setX(i,p.getX(i)+va[i*3]*0.04);
+      p.setY(i,p.getY(i)+va[i*3+1]*0.04-0.01);
+      p.setZ(i,p.getZ(i)+va[i*3+2]*0.04);
+    }
+    p.needsUpdate=true;
+    if(life<1) requestAnimationFrame(tick); else scene.remove(pts);
+  };
+  tick();
+}
+
+// ================================================================
+//  TOAST
+// ================================================================
+let _toastTm=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.style.display='block';
+  if(_toastTm) clearTimeout(_toastTm);
+  _toastTm=setTimeout(()=>el.style.display='none', 3200);
+}
+
+// ================================================================
+//  MISSION COMPLETE
+// ================================================================
+function missionComplete(){
+  if(animId){ cancelAnimationFrame(animId); animId=null; }
+  const elapsed=Math.round((Date.now()-gameStartTime)/1000);
+  document.getElementById('mcIron').textContent=ironCount;
+  document.getElementById('mcWater').textContent=waterCount;
+  document.getElementById('mcTime').textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+  document.getElementById('missionComplete').style.display='flex';
+  // Submit to leaderboard
+  submitScore();
+}
+
+// ================================================================
+//  MULTIPLAYER — Cloudflare Worker + Durable Objects WebSocket
+// ================================================================
+
+// ── HTTP helpers ─────────────────────────────────────────────
+async function apiPost(path, body){
+  const r=await fetch(WORKER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.statusText})); throw new Error(e.error||r.statusText); }
+  return r.json();
+}
+
+// ── Create room (host) ────────────────────────────────────────
+async function createRoom(){
+  const nm=document.getElementById('playerName').value.trim()||'ROVER-1';
+  playerName=nm;
+  document.getElementById('mpStatus').textContent='Creating room...';
+  document.getElementById('btnCreateRoom').disabled=true;
+  try{
+    const data=await apiPost('/room/create',{playerName:nm});
+    mpToken=data.token; mpRoomCode=data.roomCode; isHost=true;
+    document.getElementById('roomCodeDisplay').textContent=data.roomCode;
+    document.getElementById('roomDisplay').style.display='block';
+    document.getElementById('mpStatus').textContent='';
+    // Connect WebSocket now — will receive peer_joined when guest connects
+    connectWS(data.roomCode, data.token);
+  }catch(e){
+    document.getElementById('mpStatus').textContent='Error: '+e.message;
+    document.getElementById('btnCreateRoom').disabled=false;
+  }
+}
+
+// ── Join room (guest) ─────────────────────────────────────────
+async function joinRoom(){
+  const nm=document.getElementById('playerName').value.trim()||'ROVER-2';
+  playerName=nm;
+  const code=document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if(code.length!==4){ document.getElementById('mpStatus').textContent='Enter a 4-character code'; return; }
+  document.getElementById('mpStatus').textContent='Joining mission...';
+  document.getElementById('btnJoinRoom').disabled=true;
+  try{
+    const data=await apiPost('/room/join',{roomCode:code,playerName:nm});
+    mpToken=data.token; mpRoomCode=data.roomCode; isHost=false;
+    // Apply already-collected minerals from room state
+    (data.collected||[]).forEach(id=>{
+      collected.add(id);
+      const m=minerals.find(mi=>mi.userData.id===id);
+      if(m) m.userData.collected=true;
+    });
+    connectWS(data.roomCode, data.token);
+  }catch(e){
+    document.getElementById('mpStatus').textContent='Error: '+e.message;
+    document.getElementById('btnJoinRoom').disabled=false;
+  }
+}
+
+// ── WebSocket connection ──────────────────────────────────────
+function connectWS(code, token){
+  if(ws){ try{ws.close();}catch(e){} ws=null; }
+  const wsUrl=WORKER_URL.replace(/^http/,'ws')+`/room/${code}/ws?token=${token}`;
+  ws=new WebSocket(wsUrl);
+
+  ws.onopen=()=>{
+    document.getElementById('mpStatus').textContent='Connected — waiting for co-pilot...';
+    if(!isHost){ document.getElementById('mpStatus').textContent='✓ Joined mission!'; }
+    isMP=true;
+  };
+
+  ws.onmessage=e=>{
+    let msg; try{ msg=JSON.parse(e.data); }catch{ return; }
+    onServerMsg(msg);
+  };
+
+  ws.onclose=e=>{
+    if(isMP&&animId){
+      // Unexpected drop — try reconnect
+      document.getElementById('connIndicator').style.display='none';
+      toast('Connection lost — reconnecting...');
+      clearTimeout(wsReconnectTimer);
+      wsReconnectTimer=setTimeout(()=>connectWS(mpRoomCode,mpToken), 3000);
+    }
+  };
+
+  ws.onerror=()=>{
+    document.getElementById('mpStatus').textContent='Connection error. Check Worker URL.';
+    document.getElementById('btnCreateRoom').disabled=false;
+    document.getElementById('btnJoinRoom').disabled=false;
+  };
+}
+
+// ── Handle incoming server messages ──────────────────────────
+function onServerMsg(msg){
+  switch(msg.type){
+
+    case 'connected':
+      // Our own welcome — apply collected state
+      mpRole=msg.role;
+      (msg.collected||[]).forEach(id=>{
+        collected.add(id);
+        const m=minerals.find(mi=>mi.userData.id===id);
+        if(m) m.userData.collected=true;
+      });
+      break;
+
+    case 'peer_joined':
+      document.getElementById('waitingStatus').textContent='✓ Co-pilot connected!';
+      document.getElementById('mpStatus').textContent='✓ Co-pilot online!';
+      if(remoteGroup) remoteGroup.visible=true;
+      setTimeout(()=>{ hideMpPanel(); startMPGame(); }, 700);
+      // If guest, also start (host already waiting)
+      if(!isHost) setTimeout(()=>{ if(document.getElementById('gameContainer').style.display==='none'){ hideMpPanel(); startMPGame(); }}, 700);
+      break;
+
+    case 'peer_left':
+      document.getElementById('connIndicator').style.display='none';
+      if(remoteGroup) remoteGroup.visible=false;
+      toast('Co-pilot disconnected');
+      break;
+
+    case 'pos':
+      if(remoteGroup){
+        remoteGroup.visible=true;
+        remoteGroup.position.set(msg.x,msg.y,msg.z);
+        remoteGroup.rotation.set(msg.rx,msg.ry,msg.rz);
+      }
+      break;
+
+    case 'collect_ok':
+      // Authoritative confirm — apply to local state
+      if(!collected.has(msg.id)){
+        collected.add(msg.id);
+        const m=minerals.find(mi=>mi.userData.id===msg.id);
+        if(m) m.userData.collected=true;
+      }
+      if(msg.by!==mpRole){
+        // Other player collected it
+        if(msg.mineralType==='water'){ waterCount++; toast(`${msg.byName} collected Water Mineral!`); if(waterCount>=TOTAL_WATER) setTimeout(missionComplete,1200); }
+        else ironCount++;
+      }
+      break;
+
+    case 'collect_denied':
+      // Server says already collected — revert our local optimistic add
+      // (nothing to do — mineral was already hidden, just ignore)
+      break;
+
+    case 'ping':
+      wsSend({type:'pong'});
+      break;
+
+    case 'chat':
+      toast(`[${msg.from}] ${msg.text}`);
+      break;
+  }
+}
+
+// ── Send helpers ──────────────────────────────────────────────
+function wsSend(data){
+  if(ws&&ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify(data));
+}
+
+function sendSync(){
+  if(!isMP||!ws) return;
+  wsSend({type:'pos',x:roverPos.x,y:roverPos.y,z:roverPos.z,rx:roverGroup.rotation.x,ry:roverGroup.rotation.y,rz:roverGroup.rotation.z});
+}
+
+// Override collectNearest to use authoritative server flow
+const _origCollect=collectNearest;
+window._collectPatched=true;
+
+function collectNearest(){
+  if(!nearestMineral) return;
+  const m=nearestMineral;
+  if(m.userData.collected||collected.has(m.userData.id)) return;
+
+  if(isMP){
+    // Optimistic local hide, then send to server for authoritative confirm
+    m.userData.collected=true; // hide immediately (will revert if denied)
+    if(m.userData.type==='iron'){ ironCount++; toast('⬡ Iron deposit scanned'); }
+    else { waterCount++; toast('◈ Water mineral secured!'); if(waterCount>=TOTAL_WATER) setTimeout(missionComplete,1200); }
+    spawnFX(m.position.clone(), m.userData.type==='water'?0x00ffe7:0xb05a2f);
+    wsSend({type:'collect',id:m.userData.id,mineralType:m.userData.type});
+    collected.add(m.userData.id);
+  } else {
+    // Single player — no server
+    m.userData.collected=true;
+    collected.add(m.userData.id);
+    if(m.userData.type==='iron'){ ironCount++; toast('⬡ Iron deposit scanned — recording coordinates'); }
+    else { waterCount++; toast('◈ Water mineral secured! H₂O traces confirmed'); if(waterCount>=TOTAL_WATER) setTimeout(missionComplete,1200); }
+    spawnFX(m.position.clone(), m.userData.type==='water'?0x00ffe7:0xb05a2f);
+  }
+}
+
+// ── Submit score on mission complete ─────────────────────────
+async function submitScore(){
+  const elapsed=Date.now()-gameStartTime;
+  try{
+    const res=await apiPost('/leaderboard',{name:playerName,iron:ironCount,water:waterCount,timeMs:elapsed});
+    if(res.rank) toast(`🏆 Ranked #${res.rank} on leaderboard!`);
+  }catch(e){ /* silent */ }
+}
+
+function startMPGame(){
+  document.getElementById('mpBadge').style.display='block';
+  document.getElementById('connIndicator').style.display='flex';
+  if(remoteGroup) remoteGroup.visible=true;
+  startGame();
+}
+
+// ================================================================
+//  MENU NAV
+// ================================================================
+function showMenu(){
+  document.getElementById('mainMenu').style.display='block';
+  animMenuStars();
+}
+
+function startSinglePlayer(){
+  document.getElementById('mainMenu').style.display='none';
+  isMP=false;
+  startGame();
+}
+
+function showMpPanel(){
+  document.getElementById('mainMenu').style.display='none';
+  document.getElementById('mpPanel').style.display='flex';
+}
+
+function hideMpPanel(){
+  document.getElementById('mpPanel').style.display='none';
+  if(document.getElementById('gameContainer').style.display==='none') document.getElementById('mainMenu').style.display='block';
+}
+
+function switchMpTab(tab){
+  document.querySelectorAll('.mp-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='create'?0:1)));
+  document.getElementById('mpCreate').classList.toggle('active',tab==='create');
+  document.getElementById('mpJoin').classList.toggle('active',tab==='join');
+}
+
+function returnToMenu(){
+  if(animId){ cancelAnimationFrame(animId); animId=null; }
+  document.getElementById('gameContainer').style.display='none';
+  document.getElementById('missionComplete').style.display='none';
+  document.getElementById('mpBadge').style.display='none';
+  document.getElementById('connIndicator').style.display='none';
+  clearTimeout(wsReconnectTimer);
+  if(ws){ try{ws.close(1000,'User left');}catch(e){} ws=null; }
+  // Close room if host
+  if(isHost&&mpRoomCode&&mpToken){
+    fetch(WORKER_URL+'/room/'+mpRoomCode,{method:'DELETE',headers:{Authorization:'Bearer '+mpToken}}).catch(()=>{});
+  }
+  isMP=false; isHost=false; mpToken=null; mpRoomCode=null; mpRole=null;
+  minerals.forEach(m=>{ m.userData.collected=false; m.visible=true; });
+  collected.clear(); ironCount=0; waterCount=0;
+  roverPos.set(0,getH(0,0)+0.52,0);
+  roverVel.set(0,0,0); roverFacing=0;
+  if(roverGroup) roverGroup.position.copy(roverPos);
+  if(remoteGroup) remoteGroup.visible=false;
+  showMenu();
+}
+
+// ================================================================
+//  MENU STAR ANIMATION
+// ================================================================
+let menuAnimRunning=false;
+function animMenuStars(){
+  const cv=document.getElementById('menuStars');
+  if(!cv) return;
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const ctx=cv.getContext('2d');
+  if(menuAnimRunning) return;
+  menuAnimRunning=true;
+  const stars=Array.from({length:220},()=>({
+    x:Math.random()*cv.width, y:Math.random()*cv.height,
+    r:Math.random()*1.4+0.2, phase:Math.random()*Math.PI*2, speed:Math.random()*0.5+0.2
+  }));
+  const draw=()=>{
+    if(document.getElementById('mainMenu').style.display==='none'){ menuAnimRunning=false; return; }
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const t=Date.now()/1000;
+    for(const s of stars){
+      const o=0.25+0.75*(0.5+0.5*Math.sin(t*s.speed+s.phase));
+      ctx.globalAlpha=o;
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  };
+  draw();
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+window.addEventListener('load', bootGame);
+</script>
+</body>
+</html>
