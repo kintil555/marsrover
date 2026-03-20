@@ -1,3 +1,0 @@
-# Cloudflare Pages redirects
-# Route semua /api/* ke Worker (jika pakai same-origin routing)
-/api/* https://mars-explorer-api.:project.workers.dev/api/:splat 200
