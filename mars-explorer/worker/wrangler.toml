@@ -1,0 +1,22 @@
+name = "mars-explorer-server"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Durable Objects for WebSocket room management
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "MarsRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["MarsRoom"]
+
+# KV for leaderboard + room metadata
+[[kv_namespaces]]
+binding = "MARS_KV"
+id = "YOUR_KV_NAMESPACE_ID"          # ganti setelah `wrangler kv:namespace create MARS_KV`
+preview_id = "YOUR_KV_PREVIEW_ID"    # ganti setelah command di atas
+
+[vars]
+MAX_PLAYERS_PER_ROOM = "2"
+ROOM_TTL_SECONDS = "3600"
